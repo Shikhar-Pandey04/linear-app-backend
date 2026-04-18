@@ -5,8 +5,11 @@ import cookieParser from "cookie-parser";
 const app = express();
 
 // --- Middlewares ---
+
+// Pehle ye hardcoded localhost tha, ab ye Render ke Environment Variables se link uthayega.
+// Agar link nahi mila, toh safety ke liye localhost use karega.
 app.use(cors({ 
-    origin: "http://localhost:5173", 
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173", 
     credentials: true 
 }));
 
@@ -22,8 +25,8 @@ import userRouter from "./routes/user.routes.js"; // User Signup/Login ke liye
 
 
 // --- Routes Declaration ---
-app.use("/api/v1/issues", issueRouter); // http://localhost:5000/api/v1/issues
-app.use("/api/v1/users", userRouter);   // http://localhost:5000/api/v1/users
+app.use("/api/v1/issues", issueRouter); 
+app.use("/api/v1/users", userRouter); 
 
 
 export { app };
