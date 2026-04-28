@@ -5,33 +5,47 @@ const createIssue = async (req, res) => {
     try {
         const { title, description, priority, project } = req.body;
 
-        // 1. Sirf Title aur Description check karo
-        if (!title || !description) {
-            return res.status(400).json({ message: "Title and Description are required" });
+        // Sirf title required hai
+        if (!title || !title.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Title is required"
+            });
         }
 
-        // --- PROJECT CHECK HATA DIYA HAI ---
-        // Ab agar project ID nahi bhi aayegi, toh task ban jayega
+        // User auth check
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized"
+            });
+        }
 
         const issue = await Issue.create({
-            title,
-            description,
-            // Model ke hisaab se lowercase mein save karte hain
+            title: title.trim(),
+            description: description?.trim() || "",
             priority: priority ? priority.toLowerCase() : "medium",
-            status: "todo", 
-            creator: req.user._id, 
-            project: project || null // Agar project nahi hai toh null chala jayega
+            status: "todo",
+            creator: req.user._id,
+            project: project || null
         });
 
-        const createdIssue = await Issue.findById(issue._id).populate("creator", "username fullName email");
+        const createdIssue = await Issue.findById(issue._id)
+            .populate("creator", "username fullName email");
 
         return res.status(201).json({
             success: true,
             data: createdIssue,
             message: "Issue created successfully! 🚀"
         });
+
     } catch (error) {
-        return res.status(400).json({ success: false, message: error.message });
+        console.log("Create Issue Error:", error);
+
+        return res.status(400).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 
@@ -47,8 +61,12 @@ const getAllIssues = async (req, res) => {
             count: issues.length,
             data: issues
         });
+
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 
@@ -56,24 +74,28 @@ const getAllIssues = async (req, res) => {
 const updateIssueStatus = async (req, res) => {
     try {
         const { issueId } = req.params;
-        const { title, description, priority, status } = req.body; 
+        const { title, description, priority, status } = req.body;
 
         const issue = await Issue.findById(issueId);
+
         if (!issue) {
-            return res.status(404).json({ message: "Issue not found" });
+            return res.status(404).json({
+                success: false,
+                message: "Issue not found"
+            });
         }
 
         const updatedIssue = await Issue.findByIdAndUpdate(
             issueId,
             {
                 $set: {
-                    title: title || issue.title,
-                    description: description || issue.description,
+                    title: title?.trim() || issue.title,
+                    description: description?.trim() || issue.description,
                     priority: priority ? priority.toLowerCase() : issue.priority,
-                    status: status ? status.toLowerCase() : issue.status,
+                    status: status ? status.toLowerCase() : issue.status
                 }
             },
-            { new: true, runValidators: true } 
+            { new: true, runValidators: true }
         ).populate("creator", "username fullName");
 
         return res.status(200).json({
@@ -81,8 +103,12 @@ const updateIssueStatus = async (req, res) => {
             data: updatedIssue,
             message: "Issue updated successfully! 🚀"
         });
+
     } catch (error) {
-        return res.status(400).json({ success: false, message: error.message });
+        return res.status(400).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 
@@ -90,19 +116,26 @@ const updateIssueStatus = async (req, res) => {
 const deleteIssue = async (req, res) => {
     try {
         const { issueId } = req.params;
-        
+
         const deletedIssue = await Issue.findByIdAndDelete(issueId);
-        
+
         if (!deletedIssue) {
-            return res.status(404).json({ message: "Issue not found" });
+            return res.status(404).json({
+                success: false,
+                message: "Issue not found"
+            });
         }
 
-        return res.status(200).json({ 
-            success: true, 
-            message: "Issue deleted successfully" 
+        return res.status(200).json({
+            success: true,
+            message: "Issue deleted successfully"
         });
+
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 
