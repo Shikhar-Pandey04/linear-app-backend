@@ -3,7 +3,7 @@ import { Issue } from "../models/Issue.model.js";
 // --- CREATE ISSUE (POST) ---
 const createIssue = async (req, res) => {
   try {
-    const { title, description, priority, project } = req.body;
+    const { title, description, priority, project, dueDate } = req.body; // ✅ added
 
     if (!title || !title.trim()) {
       return res.status(400).json({
@@ -18,7 +18,8 @@ const createIssue = async (req, res) => {
       priority: priority ? priority.toLowerCase() : "medium",
       status: "todo",
       creator: req.user._id,
-      project: project || null
+      project: project || null,
+      dueDate: dueDate ? new Date(dueDate) : null, // ✅ added
     });
 
     const createdIssue = await Issue.findById(issue._id)
@@ -63,7 +64,7 @@ const getAllIssues = async (req, res) => {
 const updateIssueStatus = async (req, res) => {
   try {
     const { issueId } = req.params;
-    const { title, description, priority, status } = req.body;
+    const { title, description, priority, status, dueDate } = req.body; // ✅ added
 
     const issue = await Issue.findOne({
       _id: issueId,
@@ -84,7 +85,8 @@ const updateIssueStatus = async (req, res) => {
           title: title?.trim() || issue.title,
           description: description?.trim() || issue.description,
           priority: priority ? priority.toLowerCase() : issue.priority,
-          status: status ? status.toLowerCase() : issue.status
+          status: status ? status.toLowerCase() : issue.status,
+          dueDate: dueDate ? new Date(dueDate) : issue.dueDate // ✅ added
         }
       },
       { new: true, runValidators: true }

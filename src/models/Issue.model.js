@@ -44,6 +44,12 @@ const issueSchema = new Schema(
       ref: "Project",
       default: null,
     },
+
+    // ✅ NEW FIELD (Calendar ke liye)
+    dueDate: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
